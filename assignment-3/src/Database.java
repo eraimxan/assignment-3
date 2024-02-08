@@ -39,7 +39,7 @@ class UserDatabase {
         }
     }
     public void showAllUsers() {
-        String sql = "SELECT * FROM users";
+        String sql = "SELECT * FROM UsersTable";
         try (Statement statement = connection.createStatement();
              ResultSet resultSet = statement.executeQuery(sql)) {
             System.out.println("User List:");
@@ -55,7 +55,7 @@ class UserDatabase {
     }
 
     public void updateUserBalance(int id, double newBalance) {
-        String sql = "UPDATE users SET balance = ? WHERE id = ?";
+        String sql = "UPDATE UsersTable SET balance = ? WHERE id = ?";
         try (PreparedStatement statement = connection.prepareStatement(sql)) {
             statement.setDouble(1, newBalance);
             statement.setInt(2, id);
@@ -71,7 +71,7 @@ class UserDatabase {
     }
 
     public void deleteUser(int id) {
-        String sql = "DELETE FROM users WHERE id = ?";
+        String sql = "DELETE FROM UsersTable WHERE id = ?";
         try (PreparedStatement statement = connection.prepareStatement(sql)) {
             statement.setInt(1, id);
             int rowsDeleted = statement.executeUpdate();
@@ -95,26 +95,27 @@ class ProductDatabase {
             e.printStackTrace();
         }
     }
+        //Create operation
+    public void addProduct(String name, double cost, int quantity, String description) throws SQLException {
+        String insertProductSQL = "INSERT INTO ProductsTable (name, cost, quantity, description) VALUES (?, ?, ?, ?)";
 
-    public void addProduct(String name, double cost, int quantity, String description) {
-        String query = "INSERT INTO ProductsTable (name,cost, quantity,description,) VALUES (?, ?, ?, ?)";
+        try (PreparedStatement insertProductStmt = connection.prepareStatement(insertProductSQL)) {
+            insertProductStmt.setString(1, name);
+            insertProductStmt.setDouble(2, cost);
+            insertProductStmt.setInt(3, quantity);
+            insertProductStmt.setString(4, description);
+            insertProductStmt.executeUpdate();
 
-        try (PreparedStatement statement = connection.prepareStatement(query)) {
-            statement.setString(1, name);
-            statement.setDouble(2, cost);
-            statement.setInt(3, quantity);
-            statement.setString(4, description);
-
-            statement.executeUpdate();
             System.out.println("Product added successfully!");
         } catch (SQLException e) {
-            e.printStackTrace();
+            System.out.println("Failed to add product: " + e.getMessage());
         }
     }
 
+
     // Read Operation
     public void showProductList() {
-        String sql = "SELECT * FROM products";
+        String sql = "SELECT * FROM ProductsTable";
         try (Statement statement = connection.createStatement();
              ResultSet resultSet = statement.executeQuery(sql)) {
             System.out.println("Product List:");
@@ -131,7 +132,7 @@ class ProductDatabase {
 
     // Update Operation
     public void updateProductQuantity(String name, int newQuantity) {
-        String sql = "UPDATE products SET quantity = ? WHERE name = ?";
+        String sql = "UPDATE ProductsTable SET quantity = ? WHERE name = ?";
         try (PreparedStatement statement = connection.prepareStatement(sql)) {
             statement.setInt(1, newQuantity);
             statement.setString(2, name);
@@ -147,24 +148,27 @@ class ProductDatabase {
     }
 
     // Delete Operation
-    public void deleteProduct(String name) {
-        String sql = "DELETE FROM products WHERE name = ?";
-        try (PreparedStatement statement = connection.prepareStatement(sql)) {
-            statement.setString(1, name);
-            int rowsDeleted = statement.executeUpdate();
-            if (rowsDeleted > 0) {
+    public void deleteProduct(String productName) throws SQLException {
+        String deleteProductSQL = "DELETE FROM ProductsTable WHERE name = ?";
+
+        try (PreparedStatement deleteProductStmt = connection.prepareStatement(deleteProductSQL)) {
+            deleteProductStmt.setString(1, productName);
+            int rowsAffected = deleteProductStmt.executeUpdate();
+
+            if (rowsAffected > 0) {
                 System.out.println("Product deleted successfully!");
             } else {
-                System.out.println("Product not found or delete failed!");
+                System.out.println("No product found with the specified name.");
             }
-        } catch (SQLException e) {
-            e.printStackTrace();
         }
     }
 
+
+
+
     public void buyProduct(int userId, String productName, int quantity) throws SQLException {
-        String getProductSQL = "SELECT * FROM ProductsTable WHERE name = ?";
-        String insertOrderSQL = "INSERT INTO orders (user_id, product_name, quantity, total_sum) VALUES (?, ?, ?, ?)";
+        String getProductSQL = "SELECT cost, quantity FROM ProductsTable WHERE name = ?";
+        String insertOrderSQL = "INSERT INTO OrdersTable (user_id, product_name, quantity, total_sum) VALUES (?, ?, ?, ?)";
         String updateProductSQL = "UPDATE ProductsTable SET quantity = quantity - ? WHERE name = ?";
         String updateUserBalanceSQL = "UPDATE UsersTable SET balance = balance - ? WHERE id = ?";
 
@@ -181,54 +185,51 @@ class ProductDatabase {
 
             if (productResult.next()) {
                 double cost = productResult.getDouble("cost");
-                double totalCost = cost * quantity;
-                int productId = productResult.getInt("id");
-                String checkUserBalanceSQL = "SELECT balance FROM users WHERE id = ?";
-                try (PreparedStatement checkUserBalanceStmt = connection.prepareStatement(checkUserBalanceSQL)) {
-                    checkUserBalanceStmt.setInt(1, userId);
-                    ResultSet userResult = checkUserBalanceStmt.executeQuery();
-                    if (userResult.next()) {
-                        double balance = userResult.getDouble("balance");
-                        if (balance >= totalCost) {
-                            // Update product quantity
-                            updateProductStmt.setInt(1, quantity);
-                            updateProductStmt.setString(2, productName);
-                            updateProductStmt.executeUpdate();
-                            // Update user balance
-                            updateUserBalanceStmt.setDouble(1, totalCost);
-                            updateUserBalanceStmt.setInt(2, userId);
-                            updateUserBalanceStmt.executeUpdate();
-                            // Insert order
-                            insertOrderStmt.setInt(1, userId);
-                            insertOrderStmt.setString(2, productName);
-                            insertOrderStmt.setInt(3, quantity);
-                            insertOrderStmt.setDouble(4, totalCost);
-                            insertOrderStmt.executeUpdate();
+                int availableQuantity = productResult.getInt("quantity");
 
-                            System.out.println("Purchase successful!");
-                            connection.commit();
-                        }else{
-                            System.out.println("Insufficient balance!");
-                            connection.rollback();
-                        }
-                    }
+                if (availableQuantity >= quantity) {
+                    double totalCost = cost * quantity;
+
+                    // Update product quantity
+                    updateProductStmt.setInt(1, quantity);
+                    updateProductStmt.setString(2, productName);
+                    updateProductStmt.executeUpdate();
+
+                    // Update user balance
+                    updateUserBalanceStmt.setDouble(1, totalCost);
+                    updateUserBalanceStmt.setInt(2, userId);
+                    updateUserBalanceStmt.executeUpdate();
+
+                    // Insert order
+                    insertOrderStmt.setInt(1, userId);
+                    insertOrderStmt.setString(2, productName);
+                    insertOrderStmt.setInt(3, quantity);
+                    insertOrderStmt.setDouble(4, totalCost);
+                    insertOrderStmt.executeUpdate();
+
+                    System.out.println("Purchase successful!");
+                    connection.commit();
+                } else {
+                    System.out.println("Insufficient quantity available!");
+                    connection.rollback();
                 }
-            }else{
+            } else {
                 System.out.println("Product not found!");
                 connection.rollback();
             }
-        }catch (SQLException e){
+        } catch (SQLException e) {
             connection.rollback();
             throw e;
-        }finally {
+        } finally {
             connection.setAutoCommit(true);
         }
     }
+
     public void returnProduct(int userId, String productName, int quantity) throws SQLException {
-        String getOrderSQL = "SELECT * FROM orders WHERE user_id = ? AND product_name = ? AND quantity = ?";
-        String updateProductSQL = "UPDATE products SET quantity = quantity + ? WHERE name = ?";
-        String updateUserBalanceSQL = "UPDATE users SET balance = balance + ? WHERE id = ?";
-        String deleteOrderSQL = "DELETE FROM orders WHERE user_id = ? AND product_name = ? AND quantity = ?";
+        String getOrderSQL = "SELECT * FROM OrdersTable WHERE user_id = ? AND product_name = ? AND quantity = ?";
+        String updateProductSQL = "UPDATE ProductsTable SET quantity = quantity + ? WHERE name = ?";
+        String updateUserBalanceSQL = "UPDATE UsersTable SET balance = balance + ? WHERE id = ?";
+        String deleteOrderSQL = "DELETE FROM OrdersTable WHERE user_id = ? AND product_name = ? AND quantity = ?";
 
         try (PreparedStatement getOrderStmt = connection.prepareStatement(getOrderSQL);
              PreparedStatement updateProductStmt = connection.prepareStatement(updateProductSQL);
@@ -321,10 +322,10 @@ class OrderDatabase{
         }
     }
     // Delete Operation for Order
-    public void deleteOrder(int orderId) {
-        String sql = "DELETE FROM orders WHERE id = ?";
+    public void deleteOrder(int UserorderId) {
+        String sql = "DELETE FROM OrdersTable WHERE user_id = ?";
         try (PreparedStatement statement = connection.prepareStatement(sql)) {
-            statement.setInt(1, orderId);
+            statement.setInt(1, UserorderId);
             int rowsDeleted = statement.executeUpdate();
             if (rowsDeleted > 0) {
                 System.out.println("Order deleted successfully!");
@@ -337,7 +338,7 @@ class OrderDatabase{
     }
     // Update Operation for Order (Update Quantity and Total Sum)
     public void updateOrder(int orderId, int newQuantity, double newTotalSum) {
-        String sql = "UPDATE orders SET quantity = ?, total_sum = ? WHERE id = ?";
+        String sql = "UPDATE OrdersTable SET quantity = ?, total_sum = ? WHERE id = ?";
         try (PreparedStatement statement = connection.prepareStatement(sql)) {
             statement.setInt(1, newQuantity);
             statement.setDouble(2, newTotalSum);
