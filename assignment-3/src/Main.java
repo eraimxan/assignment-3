@@ -27,6 +27,11 @@ public class Main {
                 System.out.println("5) To return a product;");
                 System.out.println("6) To show all users;");
                 System.out.println("7) To show the certain user’s orders.");
+                System.out.println("8) To delete the certain user;");
+                System.out.println("9) To delete the certain product;");
+                System.out.println("10) To delete the order;");
+                System.out.println("11) To update the quantity of the product;");
+                System.out.println("12) To update the balance of the user;");
                 System.out.println("0) Exit");
 
                 System.out.print("Enter your choice: ");
@@ -87,6 +92,36 @@ public class Main {
                         int showOrdersUserId = scanner.nextInt();
                         order.showUserOrders(showOrdersUserId);
                         break;
+                    case 8:
+                        System.out.print("Enter user ID to delete the user: ");
+                        int userID = scanner.nextInt();
+                        user.deleteUser(userID);
+                        break;
+                    case 9:
+                        System.out.print("Enter product name to delete it: ");
+                        scanner.nextLine();
+                        String productname  = scanner.nextLine();
+                        product.deleteProduct(productname);
+                        break;
+                    case 10:
+                        System.out.print("Enter the user ID to delete the order: ");
+                        scanner.nextLine();
+                        int user_id = scanner.nextInt();
+                        order.deleteOrder(user_id);
+                    case 11:
+                        System.out.print("Enter the name of the product: ");
+                        scanner.nextLine();
+                        productname = scanner.nextLine();
+                        System.out.print("Enter the quantity that you want to change: " );
+                        int quantity = scanner.nextInt();
+                        product.updateProductQuantity(productname, quantity);
+                    case 12:
+                        System.out.print("Enter the user ID: ");
+                        scanner.nextLine();
+                        user_id = scanner.nextInt();
+                        System.out.print("Enter the changes in your balance: " );
+                        int newbalance = scanner.nextInt();
+                        user.updateUserBalance(user_id, newbalance);
                     case 0:
                         System.out.println("Exiting the program. Goodbye!");
                         break;
