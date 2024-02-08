@@ -27,6 +27,8 @@ public class Main {
                 System.out.println("5) To return a product;");
                 System.out.println("6) To show all users;");
                 System.out.println("7) To show the certain user’s orders.");
+                System.out.println("8)To delete the certain user;");
+                System.out.println("9)To delete the certain product;");
                 System.out.println("0) Exit");
 
                 System.out.print("Enter your choice: ");
@@ -86,6 +88,17 @@ public class Main {
                         System.out.print("Enter user ID to show orders: ");
                         int showOrdersUserId = scanner.nextInt();
                         order.showUserOrders(showOrdersUserId);
+                        break;
+                    case 8:
+                        System.out.print("Enter user ID to delete the user: ");
+                        int userID = scanner.nextInt();
+                        user.deleteUser(userID);
+                        break;
+                    case 9:
+                        System.out.print("Enter product name to delete it: ");
+                        scanner.nextLine();
+                        String productname  = scanner.nextLine();
+                        product.deleteProduct(productname);
                         break;
                     case 0:
                         System.out.println("Exiting the program. Goodbye!");
