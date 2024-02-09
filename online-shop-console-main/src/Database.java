@@ -38,21 +38,28 @@ class UserDatabase {
             e.printStackTrace();
         }
     }
+    // Read operation
     public void showAllUsers() {
         String sql = "SELECT * FROM UsersTable";
-        try (Statement statement = connection.createStatement();
-             ResultSet resultSet = statement.executeQuery(sql)) {
+        try (PreparedStatement statement = connection.prepareStatement(sql);
+             ResultSet resultSet = statement.executeQuery()) {
+            if (!resultSet.next()) {
+                System.out.println("No users found");
+                return; // Exit the method if no users are found
+            }
+
             System.out.println("User List:");
-            while (resultSet.next()) {
+            do {
                 int id = resultSet.getInt("id");
                 String name = resultSet.getString("name");
                 double balance = resultSet.getDouble("balance");
-                System.out.println("ID: " + id + " - Name: " + name + " - Balance: $" + balance);
-            }
+                System.out.println("ID: " + id + ", Name: " + name + ", Balance: $" + balance);
+            } while (resultSet.next());
         } catch (SQLException e) {
             e.printStackTrace();
         }
     }
+
 
     public void updateUserBalance(int id, double newBalance) {
         String sql = "UPDATE UsersTable SET balance = ? WHERE id = ?";
@@ -116,19 +123,26 @@ class ProductDatabase {
     // Read Operation
     public void showProductList() {
         String sql = "SELECT * FROM ProductsTable";
-        try (Statement statement = connection.createStatement();
-             ResultSet resultSet = statement.executeQuery(sql)) {
+        try (PreparedStatement statement = connection.prepareStatement(sql);
+             ResultSet resultSet = statement.executeQuery()) {
+            if (!resultSet.next()) {
+                System.out.println("No product found");
+                return; // Exit the method if no products are found
+            }
+
             System.out.println("Product List:");
-            while (resultSet.next()) {
+            do {
                 String name = resultSet.getString("name");
                 double cost = resultSet.getDouble("cost");
                 int quantity = resultSet.getInt("quantity");
-                System.out.println(name + " - $" + cost + " - Quantity: " + quantity);
-            }
+                String description = resultSet.getString("description");
+                System.out.println("Name: " + name + ", Cost: $" + cost + ", Quantity: " + quantity + ", Description: " + description);
+            } while (resultSet.next());
         } catch (SQLException e) {
             e.printStackTrace();
         }
     }
+
 
     // Update Operation
     public void updateProductQuantity(String name, int newQuantity) {
@@ -309,18 +323,24 @@ class OrderDatabase{
         try (PreparedStatement statement = connection.prepareStatement(sql)) {
             statement.setInt(1, userId);
             try (ResultSet resultSet = statement.executeQuery()) {
+                if (!resultSet.next()) {
+                    System.out.println("No orders found for user " + userId);
+                    return; // Exit the method if no orders are found for the user
+                }
+
                 System.out.println("Orders for User " + userId + ":");
-                while (resultSet.next()) {
+                do {
                     String productName = resultSet.getString("product_name");
                     int quantity = resultSet.getInt("quantity");
                     double totalSum = resultSet.getDouble("total_sum");
                     System.out.println("Product: " + productName + " - Quantity: " + quantity + " - Total: $" + totalSum);
-                }
+                } while (resultSet.next());
             }
         } catch (SQLException e) {
             e.printStackTrace();
         }
     }
+
     // Delete Operation for Order
     public void deleteOrder(int UserorderId) {
         String sql = "DELETE FROM OrdersTable WHERE user_id = ?";
