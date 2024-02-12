@@ -358,7 +358,7 @@ class OrderDatabase{
     }
     // Update Operation for Order (Update Quantity and Total Sum)
     public void updateOrder(int orderId, int newQuantity, double newTotalSum) {
-        String sql = "UPDATE OrdersTable SET quantity = ?, total_sum = ? WHERE id = ?";
+        String sql = "UPDATE OrdersTable SET quantity = ?, total_sum = ? WHERE user_id = ?";
         try (PreparedStatement statement = connection.prepareStatement(sql)) {
             statement.setInt(1, newQuantity);
             statement.setDouble(2, newTotalSum);
