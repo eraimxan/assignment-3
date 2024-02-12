@@ -32,6 +32,7 @@ public class Main {
                 System.out.println("10) To delete the order;");
                 System.out.println("11) To update the quantity of the product;");
                 System.out.println("12) To update the balance of the user;");
+                System.out.println("13) To update the order;");
                 System.out.println("0) Exit");
 
                 System.out.print("Enter your choice: ");
@@ -93,6 +94,7 @@ public class Main {
                         order.showUserOrders(showOrdersUserId);
                         break;
                     case 8:
+                        scanner.nextLine();
                         System.out.print("Enter user ID to delete the user: ");
                         int userID = scanner.nextInt();
                         user.deleteUser(userID);
@@ -122,6 +124,15 @@ public class Main {
                         System.out.print("Enter the changes in your balance: " );
                         int newbalance = scanner.nextInt();
                         user.updateUserBalance(user_id, newbalance);
+                    case 13:
+                        System.out.print("Enter the user ID: ");
+                        scanner.nextLine();
+                        user_id = scanner.nextInt();
+                        System.out.print("Enter the changes in quantity: " );
+                        quantity = scanner.nextInt();
+                        System.out.println("Enter the changes in total sum: ");
+                        int totalsum = scanner.nextInt();
+                        order.updateOrder(user_id, quantity, totalsum);
                     case 0:
                         System.out.println("Exiting the program. Goodbye!");
                         break;
